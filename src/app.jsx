@@ -7,19 +7,18 @@ import Product from './components/product';
 import ShoppingCart from './components/shopping-cart';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 
-
 class App extends Component {
     state = {
         items: [],
         discountProduct: null,
         displayCart: false, // New state to manage the display of ShoppingCart
+        windowWidth: window.innerWidth // Track window width
     }
 
     // Lifecycle method that runs after the component is mounted
     componentDidMount() {
         this.startDiscountCycle();
         window.addEventListener('resize', this.handleResize);
-        this.handleResize(); // Check initial window size
     }
 
     // Lifecycle method that runs before the component is unmounted
@@ -29,9 +28,7 @@ class App extends Component {
 
     // Handles window resize events
     handleResize = () => {
-        if (window.innerWidth > 420) {
-            this.setState({ displayCart: false });
-        }
+        this.setState({ windowWidth: window.innerWidth });
     }
 
     // Starts a cycle to apply a random discount at random intervals
@@ -85,7 +82,7 @@ class App extends Component {
 
     // Toggles the display of the shopping cart
     toggleDisplay = () => {
-        if (window.innerWidth <= 560) {
+        if (this.state.windowWidth <= 560) {
             this.setState(prevState => ({ displayCart: !prevState.displayCart }));
         }
     }
@@ -109,36 +106,63 @@ class App extends Component {
         ];
 
         return (
-            <Router>
+            <Router basename="/disco-hunter">
                 <div className='main-frame'>
                     <Navbar className='navbar' />
                     <div className='shop-frame'>
                         <Routes>
                             <Route path="/" element={
                                 <>
-                                    <div className="toggle-btn" onClick={this.toggleDisplay}>
-                                        toggle-btn
-                                    </div>
-                                    <div className='prod-frame'>
-                                        {productData.map(product => (
-                                            <Product
-                                                key={product.title}
-                                                title={product.title}
-                                                onAdd={() => this.addItem(
-                                                    product.title,
-                                                    1,
-                                                    this.state.discountProduct === product.title ? product.price * discount : product.price,
-                                                    this.state.discountProduct === product.title
-                                                )}
-                                                img={product.img}
-                                                text={product.text}
-                                                price={product.price}
-                                                discount={this.state.discountProduct === product.title}
-                                            />
-                                        ))}
-                                    </div>
-                                    {(window.innerWidth > 560 || this.state.displayCart) && (
-                                        <ShoppingCart items={this.state.items} onAdd={this.addItem} onReset={this.resetCart} />
+                                    {this.state.windowWidth <= 560 && (
+                                        <div className="toggle-btn" onClick={this.toggleDisplay}>
+                                            toggle-btn
+                                        </div>
+                                    )}
+                                    {this.state.windowWidth > 560 ? (
+                                        <>
+                                            <div className='prod-frame'>
+                                                {productData.map(product => (
+                                                    <Product
+                                                        key={product.title}
+                                                        title={product.title}
+                                                        onAdd={() => this.addItem(
+                                                            product.title,
+                                                            1,
+                                                            this.state.discountProduct === product.title ? product.price * discount : product.price,
+                                                            this.state.discountProduct === product.title
+                                                        )}
+                                                        img={product.img}
+                                                        text={product.text}
+                                                        price={product.price}
+                                                        discount={this.state.discountProduct === product.title}
+                                                    />
+                                                ))}
+                                            </div>
+                                            <ShoppingCart items={this.state.items} onAdd={this.addItem} onReset={this.resetCart} />
+                                        </>
+                                    ) : (
+                                        this.state.displayCart ? (
+                                            <ShoppingCart items={this.state.items} onAdd={this.addItem} onReset={this.resetCart} />
+                                        ) : (
+                                            <div className='prod-frame'>
+                                                {productData.map(product => (
+                                                    <Product
+                                                        key={product.title}
+                                                        title={product.title}
+                                                        onAdd={() => this.addItem(
+                                                            product.title,
+                                                            1,
+                                                            this.state.discountProduct === product.title ? product.price * discount : product.price,
+                                                            this.state.discountProduct === product.title
+                                                        )}
+                                                        img={product.img}
+                                                        text={product.text}
+                                                        price={product.price}
+                                                        discount={this.state.discountProduct === product.title}
+                                                    />
+                                                ))}
+                                            </div>
+                                        )
                                     )}
                                 </>
                             } />
@@ -147,14 +171,12 @@ class App extends Component {
                         </Routes>
                     </div>
                     <div className="footer">
-                    &copy; Lars Mensching
-                    <img src="/assets/images/favicon-left-62kb.png" alt="menu" />
-                    
+                        &copy; Lars Mensching
+                        <img src={process.env.PUBLIC_URL + "/assets/images/favicon-left-62kb.png"} alt="menu" />
                     </div>
                 </div>
             </Router>
         );
-
     }
 }
 
